@@ -114,10 +114,18 @@
           const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
           useEffect(()=>{
-            function onKey(e){ if(e.key==="Escape") onClose(); }
+            function onKey(e){ 
+              if(e.key==="Escape") {
+                if(zoomedImage) {
+                  setZoomedImage(null);
+                } else {
+                  onClose();
+                }
+              }
+            }
             if(item){ document.addEventListener("keydown", onKey); }
             return ()=>document.removeEventListener("keydown", onKey);
-          },[item, onClose]);
+          },[item, onClose, zoomedImage]);
 
 
           const scrollToNextImage = () => {
@@ -212,7 +220,7 @@
                     alt:(item.title || "Project image")+" "+(i+1),
                     onClick: (e) => { e.stopPropagation(); handleImageClick(src); },
                     style:{ cursor:"pointer" },
-                    title:"点击查看大图"
+                    title:"Click to view the large image"
                   }),
                   h("div", { 
                     style: { position:"absolute", top:"10px", right:"10px", background:"rgba(0,0,0,0.6)", color:"white", padding:"4px 8px", borderRadius:"4px", fontSize:"12px", pointerEvents:"none" }
@@ -221,7 +229,7 @@
               ),
               hasMore ? h("button", { className:"lb-cue", onClick: (e) => { e.stopPropagation(); scrollToNextImage(); }, type:"button" }, "Scroll for more images ↓") : null
             ),
-            zoomedImage && h("div", { className:"zoom-overlay", onClick: () => setZoomedImage(null), style: { position:"fixed", inset:0, background:"rgba(0,0,0,0.95)", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center" } },
+            zoomedImage && h("div", { className:"zoom-overlay", onClick: (e) => { if(e.target === e.currentTarget) setZoomedImage(null); }, style: { position:"fixed", inset:0, background:"rgba(0,0,0,0.95)", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center" } },
               h("div", { className:"zoom-controls", style: { position:"absolute", top:"20px", right:"20px", display:"flex", gap:"10px", zIndex:201 } },
                 h("button", { onClick: (e) => { e.stopPropagation(); handleZoomOut(); }, style: { padding:"8px 16px", background:"#fff", border:"none", borderRadius:"4px", cursor:"pointer", fontSize:"18px" } }, "−"),
                 h("button", { onClick: (e) => { e.stopPropagation(); handleReset(); }, style: { padding:"8px 16px", background:"#fff", border:"none", borderRadius:"4px", cursor:"pointer" } }, "100%"),
