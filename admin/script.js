@@ -337,7 +337,7 @@ async function uploadFile(file, folder, onProgress = null) {
       if (xhr.status >= 200 && xhr.status < 300) {
         try {
           const data = JSON.parse(xhr.responseText);
-          resolve(data.url);
+          resolve(data);
         } catch (error) {
           reject(new Error('Failed to parse response'));
         }
@@ -905,7 +905,7 @@ async function handlePaintingSubmit(e) {
         progressDiv.style.display = 'block';
         progressInfo.textContent = `Uploading image ${i + 1} of ${totalFiles} (${fileSizeMB} MB)...`;
         
-        const response = await uploadFile(file, 'paintings', (percent) => {
+        const response = await uploadFile(file, 'general', (percent) => {
           // Calculate overall progress
           const overallPercent = Math.round(((i + percent) / totalFiles));
           progressFill.style.width = overallPercent + '%';

@@ -56,13 +56,46 @@ const upload = multer({
 // Generate thumbnail
 async function generateThumbnail(inputPath, outputPath, width = 300, height = 300) {
   try {
-    await sharp(inputPath)
-      .resize(width, height, { 
-        fit: 'inside',
-        withoutEnlargement: true 
+    // Get image metadata first to check dimensions
+    const metadata = await sharp(inputPath).metadata();
+    console.log(`Image dimensions: ${metadata.width}x${metadata.height}`);
+    
+    // If image is very large (>100MB), try to read it in chunks and resize
+    const stats = await require('fs').promises.stat(inputPath);
+    const fileSizeMB = stats.size / (1024 * 1024);
+    console.log(`File size: ${fileSizeMB.toFixed(2)} MB`);
+    
+    // For very large files, use simpler approach
+    if (fileSizeMB > 100) {
+      console.log('Large file detected, using sequential processing');
+      // First resize to intermediate size
+      await sharp(inputPath, {
+        limitInputPixels: false  // Allow processing very large images
       })
-      .jpeg({ quality: 80 })
-      .toFile(outputPath);
+        .resize(2000, 2000, { fit: 'inside' })
+        .jpeg({ quality: 80 })
+        .toFile(outputPath + '.tmp');
+      
+      // Then create thumbnail
+      await sharp(outputPath + '.tmp')
+        .resize(width, height, { fit: 'inside' })
+        .jpeg({ quality: 80 })
+        .toFile(outputPath);
+      
+      // Clean up temp file
+      await require('fs').promises.unlink(outputPath + '.tmp');
+    } else {
+      // Normal processing for smaller files
+      await sharp(inputPath)
+        .resize(width, height, { 
+          fit: 'inside',
+          withoutEnlargement: true 
+        })
+        .jpeg({ quality: 80 })
+        .toFile(outputPath);
+    }
+    
+    console.log(`Thumbnail generated: ${outputPath}`);
     return true;
   } catch (error) {
     console.error('Thumbnail generation error:', error);
@@ -84,9 +117,9 @@ router.post('/', verifyToken, upload.single('file'), async (req, res) => {
     const filename = req.file.filename;
     const url = `/uploads/${folder}/${filename}`;
 
-    // Generate thumbnail for paintings folder
+    // Generate thumbnail for paintings and general folders
     let thumbnailUrl = null;
-    if (folder === 'paintings') {
+    if (folder === 'paintings' || folder === 'general') {
       const thumbnailDir = path.join(uploadsDir, 'thumbnails');
       if (!fs.existsSync(thumbnailDir)) {
         fs.mkdirSync(thumbnailDir, { recursive: true });
