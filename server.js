@@ -19,8 +19,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: false
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '300mb' }));
+app.use(express.urlencoded({ extended: true, limit: '300mb' }));
 
 // Serve static files
 app.use(express.static('.'));
