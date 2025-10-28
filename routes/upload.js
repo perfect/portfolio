@@ -56,14 +56,14 @@ const upload = multer({
 // Generate thumbnail
 async function generateThumbnail(inputPath, outputPath, width = 300, height = 300) {
   try {
-    // Get image metadata first to check dimensions
-    const metadata = await sharp(inputPath).metadata();
-    console.log(`Image dimensions: ${metadata.width}x${metadata.height}`);
-    
-    // If image is very large (>100MB), try to read it in chunks and resize
+    // Get file size first to decide processing approach
     const stats = await require('fs').promises.stat(inputPath);
     const fileSizeMB = stats.size / (1024 * 1024);
     console.log(`File size: ${fileSizeMB.toFixed(2)} MB`);
+    
+    // Get image metadata (with pixel limit disabled for large files)
+    const metadata = await sharp(inputPath, { limitInputPixels: false }).metadata();
+    console.log(`Image dimensions: ${metadata.width}x${metadata.height}`);
     
     // For very large files, use simpler approach
     if (fileSizeMB > 100) {
