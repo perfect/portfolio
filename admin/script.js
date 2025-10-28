@@ -80,25 +80,45 @@ function previewMultipleImages(files) {
   imageFiles.forEach((file, index) => {
     window.currentPaintingFiles.push(file);
     
-    const reader = new FileReader();
-    reader.onload = (e) => {
+    // Use URL.createObjectURL instead of FileReader for large files
+    // This creates a blob URL that doesn't load the entire file into memory
+    try {
+      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      const imageUrl = URL.createObjectURL(file);
+      
       const container = document.createElement('div');
       container.className = 'drag-item';
       container.draggable = true;
       container.dataset.index = window.currentPaintingFiles.length - 1;
       
       const img = document.createElement('img');
-      img.src = e.target.result;
+      img.src = imageUrl;
       img.className = 'preview-img';
-      img.title = file.name;
+      img.title = file.name + ` (${fileSizeMB} MB)`;
+      
+      // Store the blob URL for cleanup later
+      container.imageUrl = imageUrl;
       
       const dragHandle = document.createElement('div');
       dragHandle.className = 'image-drag-handle';
       dragHandle.textContent = '☰';
       dragHandle.title = 'Drag to reorder';
       
+      // Add file size info
+      const sizeInfo = document.createElement('div');
+      sizeInfo.style.position = 'absolute';
+      sizeInfo.style.bottom = '5px';
+      sizeInfo.style.left = '5px';
+      sizeInfo.style.background = 'rgba(0,0,0,0.6)';
+      sizeInfo.style.color = 'white';
+      sizeInfo.style.padding = '2px 6px';
+      sizeInfo.style.borderRadius = '4px';
+      sizeInfo.style.fontSize = '11px';
+      sizeInfo.textContent = fileSizeMB + ' MB';
+      
       container.appendChild(dragHandle);
       container.appendChild(img);
+      container.appendChild(sizeInfo);
       previewDiv.appendChild(container);
       
       loadedCount++;
@@ -106,15 +126,14 @@ function previewMultipleImages(files) {
       if (loadedCount === totalImages) {
         setTimeout(() => setupImageDragAndDrop(previewDiv), 100);
       }
-    };
-    reader.onerror = () => {
-      console.error('Failed to read file:', file.name);
+    } catch (error) {
+      console.error('Failed to create preview for file:', file.name, error);
+      alert(`无法预览文件 ${file.name}。文件可能太大。请直接上传。`);
       loadedCount++;
       if (loadedCount === totalImages) {
         setTimeout(() => setupImageDragAndDrop(previewDiv), 100);
       }
-    };
-    reader.readAsDataURL(file);
+    }
   });
   
   // Show count
@@ -131,11 +150,15 @@ function previewMultipleImages(files) {
 
 function previewImage(file, previewId) {
   if (file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
+    try {
+      // Use blob URL for large files
+      const imageUrl = URL.createObjectURL(file);
       const img = document.getElementById(previewId);
-      img.src = e.target.result;
+      img.src = imageUrl;
       img.style.display = 'block';
+      
+      // Store URL for cleanup
+      img._objectUrl = imageUrl;
       
       // Keep upload button visible
       const label = img.parentElement.querySelector('.upload-label');
@@ -144,8 +167,10 @@ function previewImage(file, previewId) {
         label.style.display = 'none'; // Hide default label
         btn.style.display = 'inline-block'; // Show change button
       }
-    };
-    reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Failed to preview image:', error);
+      alert('文件太大，无法预览。请直接上传。');
+    }
   }
 }
 
