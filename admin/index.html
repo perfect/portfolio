@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio Management</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="screen active">
+      <div class="login-container">
+        <h1>Portfolio Management System</h1>
+        <form id="loginForm">
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" value="admin" required>
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Login</button>
+          <div id="loginError" class="error-message"></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="adminScreen" class="screen">
+      <header class="admin-header">
+        <h1>Portfolio Management</h1>
+        <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+      </header>
+
+      <main class="admin-main">
+        <!-- Navigation Tabs -->
+        <nav class="tabs">
+          <button class="tab active" data-tab="covers">Cover Images</button>
+          <button class="tab" data-tab="paintings">Paintings</button>
+          <button class="tab" data-tab="profile">Profile</button>
+        </nav>
+
+        <!-- Covers Tab -->
+        <div id="covers-tab" class="tab-content active">
+          <h2>Cover Images</h2>
+          <div class="cover-upload-section">
+            <div class="upload-item">
+              <h3>Large Cover</h3>
+              <div class="upload-area" data-position="big">
+                <img id="cover-big-preview" src="" alt="Preview" style="display: none;">
+                <input type="file" id="cover-big-input" accept="image/*">
+                <label for="cover-big-input" class="upload-label">Select Image</label>
+                <button class="btn btn-secondary" onclick="document.getElementById('cover-big-input').click()" style="margin-top: 10px;">Change Image</button>
+              </div>
+              <div id="cover-big-progress" class="upload-progress" style="display: none;">
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 0%;"></div>
+                </div>
+                <div class="progress-text">0%</div>
+              </div>
+              <button class="btn btn-primary" onclick="uploadCover('big')">Upload Cover</button>
+            </div>
+            <div class="upload-item">
+              <h3>Tall Cover</h3>
+              <div class="upload-area" data-position="tall">
+                <img id="cover-tall-preview" src="" alt="Preview" style="display: none;">
+                <input type="file" id="cover-tall-input" accept="image/*">
+                <label for="cover-tall-input" class="upload-label">Select Image</label>
+                <button class="btn btn-secondary" onclick="document.getElementById('cover-tall-input').click()" style="margin-top: 10px;">Change Image</button>
+              </div>
+              <div id="cover-tall-progress" class="upload-progress" style="display: none;">
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 0%;"></div>
+                </div>
+                <div class="progress-text">0%</div>
+              </div>
+              <button class="btn btn-primary" onclick="uploadCover('tall')">Upload Cover</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Paintings Tab -->
+        <div id="paintings-tab" class="tab-content">
+              <h2>Paintings</h2>
+          <button class="btn btn-primary" onclick="showAddPaintingForm()">Add New Painting</button>
+          <p style="margin-top: 10px; color: #666; font-size: 14px;">Each painting can have multiple images. Select multiple images when adding a new painting.</p>
+          
+          <div id="paintingsList" class="paintings-list"></div>
+
+          <!-- Add/Edit Painting Modal -->
+          <div id="paintingModal" class="modal">
+            <div class="modal-content">
+              <span class="close" onclick="closePaintingModal()">&times;</span>
+              <h2 id="modalTitle">Add Painting</h2>
+              <form id="paintingForm">
+                <div class="form-group">
+                  <label>Title *</label>
+                  <input type="text" id="paintingTitle" required>
+                </div>
+                <div class="form-group">
+                  <label>Description *</label>
+                  <textarea id="paintingDesc" rows="4" required></textarea>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Year *</label>
+                    <input type="text" id="paintingYear" placeholder="e.g. 2025" required>
+                  </div>
+                  <div class="form-group">
+                    <label>Medium *</label>
+                    <input type="text" id="paintingMedium" placeholder="e.g. Oil on canvas" required>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Size *</label>
+                    <input type="text" id="paintingSize" placeholder="e.g. 24×18 in" required>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Existing Images</label>
+                  <div id="existingImagesList" style="display: none;">
+                    <p style="color: #666; margin-bottom: 0.5rem;">Current images (drag to reorder, click × to delete):</p>
+                    <div id="existingImagesPreview" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.5rem; margin-bottom: 1rem;"></div>
+                  </div>
+                  <label>Add New Images</label>
+                  <input type="file" id="paintingImages" multiple accept="image/*">
+                  <div id="paintingImagesPreview"></div>
+                  <small style="color: #666;">You can select multiple images by holding Ctrl (Cmd on Mac). Drag images to reorder them. The order you set here will be saved.</small>
+                  <div id="painting-progress" class="upload-progress" style="display: none; margin-top: 1rem;">
+                    <div class="progress-info"></div>
+                    <div class="progress-bar">
+                      <div class="progress-fill" style="width: 0%;"></div>
+                    </div>
+                    <div class="progress-text">0%</div>
+                  </div>
+                </div>
+                <div class="modal-actions">
+                  <button type="button" class="btn btn-secondary" onclick="closePaintingModal()">Cancel</button>
+                  <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Profile Tab -->
+        <div id="profile-tab" class="tab-content">
+          <h2>Profile</h2>
+          <form id="profileForm">
+            <div class="form-group">
+              <label>Avatar</label>
+              <div class="upload-area" style="width: 200px; height: 200px;">
+                <img id="avatarPreview" src="" alt="Avatar" style="display: none;">
+                <input type="file" id="avatarInput" accept="image/*">
+                <label for="avatarInput" class="upload-label">Select Avatar</label>
+              </div>
+              <div id="avatar-progress" class="upload-progress" style="display: none;">
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 0%;"></div>
+                </div>
+                <div class="progress-text">0%</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <textarea id="profileDesc" rows="6" required></textarea>
+            </div>
+            <div class="form-group">
+              <label>Tags (One per line)</label>
+              <textarea id="profileTags" rows="8" placeholder="Painting&#10;Sketching&#10;Figma"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Profile</button>
+          </form>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
+

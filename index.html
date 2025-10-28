@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Portfolio of Brandon Ding — art, UI/UX and industrial design (black & white), multi-image details.">
+    <title>Brandon Ding — Portfolio</title>
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <!-- React UMD (no installation required) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+
+    <script>
+      (function(){
+        "use strict";
+        const h = React.createElement;
+        const { useState, useEffect, useRef } = React;
+
+        // Data will be loaded from API dynamically
+
+        function Masthead({ covers }) {
+          const bigImg = covers.big || "assets/project-1.jpg";
+          const tallImg = covers.tall || "assets/project-2.jpg";
+          
+          return h("section", { id:"home", className:"masthead" },
+            h("div", { className:"container" },
+              h("div", { className:"nameplate" },
+                h("div", { className:"display-name" },
+                  h("div", null, "BRANDON"),
+                  h("div", null, "DING")
+                ),
+                h("nav", { className:"mast-nav", "aria-label":"Primary" },
+                  h("a", { href:"#portfolio" }, "Portfolio"),
+                  h("a", { href:"#about" }, "About")
+                )
+              ),
+              h("div", { className:"masthead-grid" },
+                h("div", { className:"big" }, h("img", { src:bigImg, alt:"" })),
+                h("div", { className:"tall" }, h("img", { src:tallImg, alt:"" }))
+              ),
+              h("div", { className:"mast-cta" },
+                h("a", { className:"btn", href:"#portfolio" }, "View Portfolio")
+              )
+            )
+          );
+        }
+
+        function ProjectCard({ item, onOpen }) {
+          const cover = item.images && item.images.length ? item.images[0] : null;
+          const alt = item.title || "Project image";
+          return h("button", { className:"card-hit", onClick: () => onOpen(item), "aria-label":"Open " + item.title },
+            h("figure", null,
+              h("img", { src:cover, alt }),
+              h("figcaption", null,
+                h("h3", null, item.title)
+              )
+            )
+          );
+        }
+
+        function Grid({ items, onOpen }) {
+          return h("div", { className:"grid", id:"project-grid" },
+            items.map(p => h("article", { key:p.id, className:"card", "data-category":p.category },
+              h(ProjectCard, { item:p, onOpen })
+            ))
+          );
+        }
+
+        function About({ profile }) {
+          const avatarUrl = profile.avatar || "assets/avatar.png";
+          const description = profile.description || "I explore painting, user interface design, and industrial/product design. I enjoy sketching, prototyping in Figma and 3D tools, and testing with real people. I'm applying to colleges for Fall 2026 and I'm excited to learn from peers and mentors.";
+          const tags = profile.tags || ["Painting","Sketching","Figma","Adobe Illustrator","Photoshop","Blender / Rhino","Prototyping","User Research"];
+          
+          return h("section", { id:"about", className:"section" },
+            h("div", { className:"container about" },
+              h("div", { className:"about-media" },
+                h("img", { className:"avatar", src:avatarUrl, alt:"Simple avatar graphic", width:256, height:256 })
+              ),
+              h("div", { className:"about-text" },
+                h("h2", null, "About Me"),
+                h("p", null, description),
+                h("ul", { className:"chips", "aria-label":"Skills" },
+                  tags.map((s,i)=>h("li",{key:i},s))
+                )
+              )
+            )
+          );
+        }
+
+        function Footer() {
+          const year = new Date().getFullYear();
+          return h("footer", { className:"site-footer" },
+            h("div", { className:"container" },
+              h("p", null, "© ", h("span", null, year), " Brandon Ding. All rights reserved.")
+            )
+          );
+        }
+
+        function Lightbox({ item, onClose }) {
+          const wrapRef = useRef(null);
+          const [atTop, setAtTop] = useState(true);
+
+          useEffect(()=>{
+            function onKey(e){ if(e.key==="Escape") onClose(); }
+            if(item){ document.addEventListener("keydown", onKey); }
+            return ()=>document.removeEventListener("keydown", onKey);
+          },[item, onClose]);
+
+          useEffect(()=>{
+            const el = wrapRef.current;
+            if(!el) return;
+            function handleScroll(){ setAtTop(el.scrollTop < 10); }
+            el.addEventListener("scroll", handleScroll, { passive:true });
+            handleScroll();
+            return ()=> el.removeEventListener("scroll", handleScroll);
+          }, [wrapRef, item]);
+
+          const scrollToNextImage = () => {
+            const el = wrapRef.current;
+            if (!el) return;
+            
+            // Get all images
+            const imgs = el.querySelectorAll('.lb-image');
+            if (imgs.length <= 1) return;
+            
+            const viewportHeight = el.clientHeight;
+            const currentScroll = el.scrollTop;
+            
+            // Find which image is currently in view
+            let currentImageIndex = -1;
+            for (let i = 0; i < imgs.length; i++) {
+              const img = imgs[i];
+              if (img.offsetTop <= currentScroll + 100) {
+                currentImageIndex = i;
+              }
+            }
+            
+            // Scroll to next image
+            if (currentImageIndex >= 0 && currentImageIndex < imgs.length - 1) {
+              const nextImg = imgs[currentImageIndex + 1];
+              nextImg.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+              });
+            } else if (imgs.length > 0) {
+              // Scroll by viewport height
+              el.scrollBy({ 
+                top: viewportHeight, 
+                behavior: 'smooth' 
+              });
+            }
+          };
+
+          // Update URL when lightbox opens/closes
+          useEffect(() => {
+            if (item && item.id) {
+              const newUrl = `#painting-${item.id}`;
+              if (window.location.hash !== newUrl) {
+                window.history.pushState({ paintingId: item.id }, '', newUrl);
+              }
+            }
+          }, [item]);
+
+          if (!item) return null;
+          const imgs = Array.isArray(item.images) && item.images.length ? item.images : [];
+          const hasMore = imgs.length > 1;
+          const sizeLabel = (item.meta?.size || "").toLowerCase().includes("in") ? "Size (inch)" : "Size";
+
+          return h("div", { className:"lb-overlay", role:"dialog", "aria-modal":"true", "aria-labelledby":"lb-title", onClick: (e) => { if(e.target === e.currentTarget) onClose(); } },
+            h("div", { className:"lb-image-wrap", ref:wrapRef },
+              ...imgs.map((src, i) => h("img", { className:"lb-image", src:src, alt:(item.title || "Project image")+" "+(i+1), key:i })),
+              hasMore ? h("button", { className:"lb-cue" + (atTop ? "" : " hide"), onClick: (e) => { e.stopPropagation(); scrollToNextImage(); }, type:"button" }, "Scroll for more images ↓") : null
+            ),
+            h("aside", { className:"lb-panel" },
+              h("div", { className:"lb-close-row" },
+                h("button", { className:"btn", onClick:onClose, "aria-label":"Close" }, "Close")
+              ),
+              h("h3", { id:"lb-title", className:"lb-title" }, item.title),
+              h("div", { className:"lb-desc" }, item.desc),
+              h("div", { className:"lb-meta-table" },
+                h("div", { className:"label" }, "Year"),
+                h("div", null, item.meta?.year || "—"),
+                h("div", { className:"label" }, "Medium"),
+                h("div", null, item.meta?.medium || "—"),
+                h("div", { className:"label" }, sizeLabel),
+                h("div", null, item.meta?.size || "—")
+              )
+            )
+          );
+        }
+
+        function App() {
+          const [active, setActive] = useState(null);
+          const [projects, setProjects] = useState([]);
+          const [covers, setCovers] = useState({});
+          const [profile, setProfile] = useState({});
+          const [loading, setLoading] = useState(true);
+
+          // Handle browser back/forward
+          useEffect(() => {
+            function handlePopState(e) {
+              const hash = window.location.hash;
+              if (hash.startsWith('#painting-')) {
+                const paintingId = parseInt(hash.replace('#painting-', ''));
+                const painting = projects.find(p => p.id === paintingId);
+                setActive(painting || null);
+              } else {
+                setActive(null);
+              }
+            }
+            window.addEventListener('popstate', handlePopState);
+            return () => window.removeEventListener('popstate', handlePopState);
+          }, [projects]);
+
+          useEffect(() => {
+            async function loadData() {
+              try {
+                const response = await fetch('/api/data');
+                const data = await response.json();
+                
+                // Transform API data to frontend format
+                const transformedProjects = (data.paintings || []).map(p => ({
+                  id: p.id,
+                  category: p.category,
+                  images: p.images || [],
+                  title: p.title,
+                  desc: p.desc,
+                  meta: {
+                    year: p.year,
+                    medium: p.medium,
+                    size: p.size
+                  }
+                }));
+                
+                setProjects(transformedProjects);
+                setCovers(data.covers || {});
+                
+                if (data.profile) {
+                  setProfile({
+                    avatar: data.profile.avatarUrl || "assets/avatar.png",
+                    description: data.profile.description || "",
+                    tags: data.profile.tags || []
+                  });
+                }
+                
+                setLoading(false);
+                
+                // Check if URL has a painting ID and open it
+                const hash = window.location.hash;
+                if (hash.startsWith('#painting-')) {
+                  const paintingId = parseInt(hash.replace('#painting-', ''));
+                  const painting = transformedProjects.find(p => p.id === paintingId);
+                  if (painting) {
+                    setActive(painting);
+                  }
+                }
+              } catch (error) {
+                console.error('Failed to load data:', error);
+                setLoading(false);
+              }
+            }
+            loadData();
+          }, []);
+
+          if (loading) {
+            return h("div", { style: { padding: "2rem", textAlign: "center" } }, "Loading...");
+          }
+
+          return h(React.Fragment, null,
+            h(Masthead, { covers }),
+            h("main", { id:"main" },
+              h("section", { id:"portfolio", className:"section" },
+                h("div", { className:"container" },
+                  h("div", { className:"section-head" },
+                    h("h2", null, "Portfolio")
+                  ),
+                  h(Grid, { items: projects, onOpen:setActive })
+                )
+              ),
+              h(About, { profile })
+            ),
+            h(Footer, null),
+            h(Lightbox, { item:active, onClose: ()=>{
+              console.log('Closing lightbox');
+              setActive(null); 
+              window.location.hash = '';
+            } })
+          );
+        }
+
+        ReactDOM.createRoot(document.getElementById("root")).render(h(App));
+      })();
+    </script>
+  </body>
+</html>
