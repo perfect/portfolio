@@ -106,7 +106,6 @@
 
         function Lightbox({ item, onClose }) {
           const wrapRef = useRef(null);
-          const [atTop, setAtTop] = useState(true);
           const [zoomedImage, setZoomedImage] = useState(null);
           const zoomedImageRef = useRef(null);
           const [zoomScale, setZoomScale] = useState(1);
@@ -120,14 +119,6 @@
             return ()=>document.removeEventListener("keydown", onKey);
           },[item, onClose]);
 
-          useEffect(()=>{
-            const el = wrapRef.current;
-            if(!el) return;
-            function handleScroll(){ setAtTop(el.scrollTop < 10); }
-            el.addEventListener("scroll", handleScroll, { passive:true });
-            handleScroll();
-            return ()=> el.removeEventListener("scroll", handleScroll);
-          }, [wrapRef, item]);
 
           const scrollToNextImage = () => {
             const el = wrapRef.current;
@@ -228,7 +219,7 @@
                   }, i+1 + " / " + imgs.length)
                 )
               ),
-              hasMore ? h("button", { className:"lb-cue" + (atTop ? "" : " hide"), onClick: (e) => { e.stopPropagation(); scrollToNextImage(); }, type:"button" }, "Scroll for more images ↓") : null
+              hasMore ? h("button", { className:"lb-cue", onClick: (e) => { e.stopPropagation(); scrollToNextImage(); }, type:"button" }, "Scroll for more images ↓") : null
             ),
             zoomedImage && h("div", { className:"zoom-overlay", onClick: () => setZoomedImage(null), style: { position:"fixed", inset:0, background:"rgba(0,0,0,0.95)", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center" } },
               h("div", { className:"zoom-controls", style: { position:"absolute", top:"20px", right:"20px", display:"flex", gap:"10px", zIndex:201 } },
