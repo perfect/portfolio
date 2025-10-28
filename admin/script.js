@@ -871,6 +871,8 @@ async function handlePaintingSubmit(e) {
     
     const newImageUrls = [];
     const totalFiles = filesToUpload.length;
+    let hasUploadError = false;
+    
     for (let i = 0; i < filesToUpload.length; i++) {
       const file = filesToUpload[i];
       try {
@@ -888,13 +890,32 @@ async function handlePaintingSubmit(e) {
         newImageUrls.push(url);
         console.log(`Uploaded: ${file.name} (${fileSizeMB} MB)`);
       } catch (error) {
+        hasUploadError = true;
         console.error(`Failed to upload ${file.name}:`, error);
         const errorMsg = error.message || 'Unknown error';
-        alert(`Failed to upload ${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB): ${errorMsg}`);
+        const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+        
+        // Ask user if they want to continue with remaining files
+        const continueUpload = confirm(
+          `Failed to upload "${file.name}" (${fileSize} MB)\n\nError: ${errorMsg}\n\nContinue uploading remaining files?`
+        );
+        
+        if (!continueUpload) {
+          progressDiv.style.display = 'none';
+          hideLoading();
+          return;
+        }
       }
     }
     
     progressDiv.style.display = 'none';
+    
+    // Check if any files were uploaded
+    if (newImageUrls.length === 0 && !currentEditingPaintingId) {
+      alert('No images were uploaded successfully. Please try again.');
+      hideLoading();
+      return;
+    }
     
     // Merge existing images and new images
     const finalImages = [...currentExistingImages, ...newImageUrls];
