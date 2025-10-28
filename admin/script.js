@@ -300,13 +300,20 @@ async function uploadFile(file, folder, onProgress = null) {
     });
 
     xhr.addEventListener('error', () => {
-      reject(new Error('Upload failed'));
+      reject(new Error('Upload failed - network error'));
     });
 
     xhr.addEventListener('abort', () => {
       reject(new Error('Upload aborted'));
     });
 
+    xhr.addEventListener('timeout', () => {
+      reject(new Error('Upload timeout - file may be too large'));
+    });
+
+    // Set timeout to 10 minutes for large files
+    xhr.timeout = 600000;
+    
     xhr.open('POST', `${API_URL}/upload`);
     xhr.setRequestHeader('Authorization', `Bearer ${token}`);
     xhr.send(formData);
@@ -826,13 +833,24 @@ async function handlePaintingSubmit(e) {
       ? window.currentPaintingFiles 
       : imageFiles;
     
+    // Check for large files and warn user
+    const largeFiles = filesToUpload.filter(f => f.size > 50 * 1024 * 1024); // > 50MB
+    if (largeFiles.length > 0) {
+      const sizes = largeFiles.map(f => `${(f.size / (1024 * 1024)).toFixed(0)}MB`).join(', ');
+      if (!confirm(`Warning: Large file(s) detected (${sizes}). Upload may take several minutes. Continue?`)) {
+        hideLoading();
+        return;
+      }
+    }
+    
     const newImageUrls = [];
     const totalFiles = filesToUpload.length;
     for (let i = 0; i < filesToUpload.length; i++) {
       const file = filesToUpload[i];
       try {
+        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
         progressDiv.style.display = 'block';
-        progressInfo.textContent = `Uploading image ${i + 1} of ${totalFiles}...`;
+        progressInfo.textContent = `Uploading image ${i + 1} of ${totalFiles} (${fileSizeMB} MB)...`;
         
         const url = await uploadFile(file, 'paintings', (percent) => {
           // Calculate overall progress
@@ -842,10 +860,11 @@ async function handlePaintingSubmit(e) {
         });
         
         newImageUrls.push(url);
-        console.log(`Uploaded: ${file.name}`);
+        console.log(`Uploaded: ${file.name} (${fileSizeMB} MB)`);
       } catch (error) {
         console.error(`Failed to upload ${file.name}:`, error);
-        alert(`Failed to upload ${file.name}. Please try again.`);
+        const errorMsg = error.message || 'Unknown error';
+        alert(`Failed to upload ${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB): ${errorMsg}`);
       }
     }
     
