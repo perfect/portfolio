@@ -267,7 +267,6 @@
                 h("button", { className:"btn", onClick:onClose, "aria-label":"Close" }, "Close")
               ),
               h("h3", { id:"lb-title", className:"lb-title" }, item.title),
-              h("div", { className:"lb-desc" }, item.desc),
               h("div", { className:"lb-meta-table" },
                 h("div", { className:"label" }, "Year"),
                 h("div", null, item.meta?.year || "—"),
@@ -275,7 +274,8 @@
                 h("div", null, item.meta?.medium || "—"),
                 h("div", { className:"label" }, sizeLabel),
                 h("div", null, item.meta?.size || "—")
-              )
+              ),
+              h("div", { className:"lb-desc", style: { marginTop: "1.5rem" } }, item.desc)
             )
           );
         }
