@@ -398,7 +398,7 @@ async function loadPaintings() {
       `;
     }).join('');
     
-    // 添加点击事件监听
+    // Add click event listeners
     container.querySelectorAll('.painting-thumbnail').forEach(thumbnail => {
       thumbnail.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -407,7 +407,7 @@ async function loadPaintings() {
       });
     });
     
-    // 添加拖拽功能
+    // Add drag and drop functionality
     setupDragAndDrop(container);
   } catch (error) {
     console.error('Failed to load paintings:', error);
@@ -569,10 +569,10 @@ function setupExistingImagesDragAndDrop() {
   });
 }
 
-// 添加图片画廊查看功能
+// Add image gallery viewing functionality
 async function showImageGallery(paintingId) {
   try {
-    // 获取该作品的所有图片
+    // Get all images for this painting
     const response = await fetch(`${API_URL}/paintings/${paintingId}`);
     const painting = await response.json();
     const images = painting.images || [];
@@ -582,7 +582,7 @@ async function showImageGallery(paintingId) {
       return;
     }
     
-    // 创建图片查看模态框
+    // Create image viewing modal
     const modal = document.createElement('div');
     modal.className = 'image-gallery-modal';
     modal.innerHTML = `
@@ -603,9 +603,9 @@ async function showImageGallery(paintingId) {
     `;
     
     document.body.appendChild(modal);
-    document.body.style.overflow = 'hidden'; // 防止背景滚动
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
     
-    // 初始化图片序号
+    // Initialize image index
     window.currentGalleryImages = images;
     window.currentGalleryIndex = 0;
     updateGalleryCounter();
@@ -654,7 +654,7 @@ function updateGalleryCounter() {
   }
 }
 
-// 键盘导航
+// Keyboard navigation
 document.addEventListener('keydown', (e) => {
   if (document.querySelector('.image-gallery-modal')) {
     if (e.key === 'ArrowRight') galleryNextImage();
