@@ -95,22 +95,43 @@ function previewMultipleImages(files) {
       
       const img = document.createElement('img');
       
-      // For large files, show a placeholder instead of loading the actual image
-      const isLargeFile = file.size > 50 * 1024 * 1024; // > 50MB
+      // For large files, show a placeholder to avoid memory issues
+      const isLargeFile = file.size > 100 * 1024 * 1024; // > 100MB
       
       if (isLargeFile) {
-        // Use a data URL for a simple placeholder
-        const canvas = document.createElement('canvas');
-        canvas.width = 300;
-        canvas.height = 200;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#f0f0f0';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#666';
-        ctx.font = '14px Arial';
+        // Use a simple placeholder for very large files (like Wikipedia does)
+        const placeholder = document.createElement('canvas');
+        placeholder.width = 300;
+        placeholder.height = 200;
+        const ctx = placeholder.getContext('2d');
+        
+        // Background
+        const gradient = ctx.createLinearGradient(0, 0, 300, 200);
+        gradient.addColorStop(0, '#e8f4f8');
+        gradient.addColorStop(1, '#d4e8ec');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 300, 200);
+        
+        // Warning icon area
+        ctx.fillStyle = '#ffa500';
+        ctx.beginPath();
+        ctx.arc(150, 80, 25, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 30px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(`${fileSizeMB} MB`, canvas.width / 2, canvas.height / 2);
-        img.src = canvas.toDataURL();
+        ctx.fillText('⚠', 150, 92);
+        
+        // File info
+        ctx.fillStyle = '#333';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Large File', 150, 120);
+        ctx.fillText(`${fileSizeMB} MB`, 150, 140);
+        
+        img.src = placeholder.toDataURL();
+        img.style.backgroundColor = '#e8f4f8';
       } else {
         img.src = imageUrl;
         img.onerror = () => {
