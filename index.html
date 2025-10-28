@@ -67,9 +67,15 @@
         }
 
         function Grid({ items, onOpen }) {
+          const handleOpen = (item) => {
+            // 保存当前滚动位置
+            const currentScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+            onOpen(item, currentScrollPosition);
+          };
+          
           return h("div", { className:"grid", id:"project-grid" },
             items.map(p => h("article", { key:p.id, className:"card", "data-category":p.category },
-              h(ProjectCard, { item:p, onOpen })
+              h(ProjectCard, { item:p, onOpen: handleOpen })
             ))
           );
         }
@@ -286,6 +292,7 @@
           const [covers, setCovers] = useState({});
           const [profile, setProfile] = useState({});
           const [loading, setLoading] = useState(true);
+          const [savedScrollPosition, setSavedScrollPosition] = useState(0);
 
           // Handle browser back/forward
           useEffect(() => {
@@ -297,11 +304,15 @@
                 setActive(painting || null);
               } else {
                 setActive(null);
+                // 恢复滚动位置
+                setTimeout(() => {
+                  window.scrollTo(0, savedScrollPosition);
+                }, 100);
               }
             }
             window.addEventListener('popstate', handlePopState);
             return () => window.removeEventListener('popstate', handlePopState);
-          }, [projects]);
+          }, [projects, savedScrollPosition]);
 
           useEffect(() => {
             async function loadData() {
@@ -365,7 +376,10 @@
                   h("div", { className:"section-head" },
                     h("h2", null, "Portfolio")
                   ),
-                  h(Grid, { items: projects, onOpen:setActive })
+                  h(Grid, { items: projects, onOpen: (item, scrollPosition) => {
+                    setSavedScrollPosition(scrollPosition);
+                    setActive(item);
+                  } })
                 )
               ),
               h(About, { profile })
@@ -375,6 +389,10 @@
               console.log('Closing lightbox');
               setActive(null); 
               window.location.hash = '';
+              // 恢复滚动位置
+              setTimeout(() => {
+                window.scrollTo(0, savedScrollPosition);
+              }, 100);
             } })
           );
         }
