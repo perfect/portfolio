@@ -114,18 +114,10 @@
           const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
           useEffect(()=>{
-            function onKey(e){ 
-              if(e.key==="Escape") {
-                if(zoomedImage) {
-                  setZoomedImage(null);
-                } else {
-                  onClose();
-                }
-              }
-            }
+            function onKey(e){ if(e.key==="Escape") onClose(); }
             if(item){ document.addEventListener("keydown", onKey); }
             return ()=>document.removeEventListener("keydown", onKey);
-          },[item, onClose, zoomedImage]);
+          },[item, onClose]);
 
 
           const scrollToNextImage = () => {
