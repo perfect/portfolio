@@ -59,6 +59,7 @@
             : (item.images && item.images.length > 0) 
               ? item.images[0] 
               : "assets/project-1.jpg";
+          console.log(`${item.title}: ${cover}`);
           const alt = item.title || "Project image";
           return h("button", { className:"card-hit", onClick: () => onOpen(item), "aria-label":"Open " + item.title },
             h("figure", null,
