@@ -13,14 +13,15 @@ p{margin:0 0 1rem} .muted{color:var(--muted)}
 
 /* ====== Masthead with nav and two images ====== */
 .masthead{background:var(--bg);padding:clamp(1rem,3vw,1.5rem) 0 .75rem}
-.nameplate{display:grid;grid-template-columns:1fr auto;align-items:end;gap:.75rem}
+.nameplate{display:grid;grid-template-columns:1fr auto;align-items:center;gap:.75rem}
 .display-name{font-size:clamp(2.2rem,8vw,4.2rem);font-weight:800;letter-spacing:-.035em;line-height:.95}
 .mast-nav{display:flex;gap:1rem;align-items:center;justify-content:flex-end}
-.mast-nav a{padding:.4rem .6rem;border-radius:.4rem;text-decoration:none}
+.mast-nav a{padding:.4rem .6rem;border-radius:.4rem;text-decoration:none;color:#000 !important;font-weight:500;font-size:clamp(1rem,2.5vw,1.1rem)}
+.mast-nav a:hover{color:#000 !important;background:rgba(0,0,0,0.05)}
 .masthead-grid{display:grid;grid-template-columns:2.1fr 1fr;gap:1rem;margin-top:1rem}
-.masthead-grid .big{aspect-ratio:4/5;border:1px solid var(--border);box-shadow:var(--shadow);border-radius:.5rem;overflow:hidden;display:block;position:relative}
+.masthead-grid .big{aspect-ratio:16/9;border:1px solid var(--border);box-shadow:var(--shadow);border-radius:.5rem;overflow:hidden;display:block;position:relative}
 .masthead-grid .big img{width:100%;height:100%;object-fit:cover;display:block}
-.masthead-grid .tall{aspect-ratio:4/5;border:1px solid var(--border);box-shadow:var(--shadow);border-radius:.5rem;overflow:hidden;display:block;position:relative}
+.masthead-grid .tall{aspect-ratio:16/9;border:1px solid var(--border);box-shadow:var(--shadow);border-radius:.5rem;overflow:hidden;display:block;position:relative}
 .masthead-grid .tall img{width:100%;height:100%;object-fit:cover;object-position:center;display:block}
 .mast-cta{margin-top:.75rem}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;padding:.55rem 1rem;border-radius:.5rem;border:1px solid #000;background:#000;color:#fff;cursor:pointer;box-shadow:var(--shadow);text-decoration:none}
