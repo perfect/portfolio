@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const sharp = require('sharp');
 const { verifyToken } = require('./auth.js');
 
 const router = express.Router();
@@ -52,6 +53,23 @@ const upload = multer({
   }
 });
 
+// Generate thumbnail
+async function generateThumbnail(inputPath, outputPath, width = 300, height = 300) {
+  try {
+    await sharp(inputPath)
+      .resize(width, height, { 
+        fit: 'inside',
+        withoutEnlargement: true 
+      })
+      .jpeg({ quality: 80 })
+      .toFile(outputPath);
+    return true;
+  } catch (error) {
+    console.error('Thumbnail generation error:', error);
+    return false;
+  }
+}
+
 // Upload endpoint - uploads single file
 router.post('/', verifyToken, upload.single('file'), async (req, res) => {
   try {
@@ -66,7 +84,26 @@ router.post('/', verifyToken, upload.single('file'), async (req, res) => {
     const filename = req.file.filename;
     const url = `/uploads/${folder}/${filename}`;
 
-    res.json({ url });
+    // Generate thumbnail for paintings folder
+    let thumbnailUrl = null;
+    if (folder === 'paintings') {
+      const thumbnailDir = path.join(uploadsDir, 'thumbnails');
+      if (!fs.existsSync(thumbnailDir)) {
+        fs.mkdirSync(thumbnailDir, { recursive: true });
+      }
+      
+      const thumbnailPath = path.join(thumbnailDir, filename);
+      const thumbnailGenerated = await generateThumbnail(filePath, thumbnailPath);
+      
+      if (thumbnailGenerated) {
+        thumbnailUrl = `/uploads/thumbnails/${filename}`;
+      }
+    }
+
+    res.json({ 
+      url, 
+      thumbnailUrl 
+    });
   } catch (error) {
     console.error('Upload error:', error);
     res.status(500).json({ error: 'Upload failed', details: error.message });

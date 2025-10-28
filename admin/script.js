@@ -785,10 +785,12 @@ async function loadProfile() {
 
 // Track existing images for editing
 let currentExistingImages = [];
+let currentExistingThumbnails = [];
 
 function showAddPaintingForm() {
   currentEditingPaintingId = null;
   currentExistingImages = [];
+  currentExistingThumbnails = [];
   window.currentPaintingFiles = [];
   document.getElementById('modalTitle').textContent = 'Add Painting';
   document.getElementById('paintingForm').reset();
@@ -803,6 +805,7 @@ function closePaintingModal() {
   document.getElementById('paintingModal').classList.remove('active');
   currentEditingPaintingId = null;
   currentExistingImages = [];
+  currentExistingThumbnails = [];
   window.currentPaintingFiles = [];
 }
 
@@ -891,6 +894,7 @@ async function handlePaintingSubmit(e) {
     }
     
     const newImageUrls = [];
+    const newThumbnailUrls = [];
     const totalFiles = filesToUpload.length;
     let hasUploadError = false;
     
@@ -901,14 +905,20 @@ async function handlePaintingSubmit(e) {
         progressDiv.style.display = 'block';
         progressInfo.textContent = `Uploading image ${i + 1} of ${totalFiles} (${fileSizeMB} MB)...`;
         
-        const url = await uploadFile(file, 'paintings', (percent) => {
+        const response = await uploadFile(file, 'paintings', (percent) => {
           // Calculate overall progress
           const overallPercent = Math.round(((i + percent) / totalFiles));
           progressFill.style.width = overallPercent + '%';
           progressText.textContent = overallPercent + '%';
         });
         
-        newImageUrls.push(url);
+        // Parse response to get both URL and thumbnail URL
+        const result = typeof response === 'string' ? { url: response } : response;
+        newImageUrls.push(result.url);
+        if (result.thumbnailUrl) {
+          newThumbnailUrls.push(result.thumbnailUrl);
+        }
+        
         console.log(`Uploaded: ${file.name} (${fileSizeMB} MB)`);
       } catch (error) {
         hasUploadError = true;
@@ -940,6 +950,7 @@ async function handlePaintingSubmit(e) {
     
     // Merge existing images and new images
     const finalImages = [...currentExistingImages, ...newImageUrls];
+    const finalThumbnails = [...currentExistingThumbnails, ...newThumbnailUrls];
     
     if (finalImages.length === 0) {
       alert('At least one image is required');
@@ -953,7 +964,8 @@ async function handlePaintingSubmit(e) {
       desc,
       category: 'art', // Default to 'art' since category is removed from form
       year, medium, size,
-      images: finalImages
+      images: finalImages,
+      thumbnails: finalThumbnails
     };
 
     const url = currentEditingPaintingId 
@@ -1022,6 +1034,7 @@ async function editPainting(id) {
 
     currentEditingPaintingId = id;
     currentExistingImages = painting.images || [];
+    currentExistingThumbnails = painting.thumbnails || [];
     window.currentPaintingFiles = [];
     
     document.getElementById('modalTitle').textContent = 'Edit Painting';

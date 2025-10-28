@@ -54,7 +54,11 @@
         }
 
         function ProjectCard({ item, onOpen }) {
-          const cover = item.images && item.images.length ? item.images[0] : null;
+          const cover = (item.thumbnails && item.thumbnails.length > 0) 
+            ? item.thumbnails[0] 
+            : (item.images && item.images.length > 0) 
+              ? item.images[0] 
+              : "assets/project-1.jpg";
           const alt = item.title || "Project image";
           return h("button", { className:"card-hit", onClick: () => onOpen(item), "aria-label":"Open " + item.title },
             h("figure", null,
@@ -224,9 +228,6 @@
             ),
             zoomedImage && h("div", { className:"zoom-overlay", onClick: () => setZoomedImage(null), style: { position:"fixed", inset:0, background:"rgba(0,0,0,0.95)", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center" } },
               h("div", { className:"zoom-controls", style: { position:"absolute", top:"20px", right:"20px", display:"flex", gap:"10px", zIndex:201 } },
-                h("button", { onClick: (e) => { e.stopPropagation(); handleZoomOut(); }, style: { padding:"8px 16px", background:"#fff", border:"none", borderRadius:"4px", cursor:"pointer", fontSize:"18px" } }, "−"),
-                h("button", { onClick: (e) => { e.stopPropagation(); handleReset(); }, style: { padding:"8px 16px", background:"#fff", border:"none", borderRadius:"4px", cursor:"pointer" } }, "100%"),
-                h("button", { onClick: (e) => { e.stopPropagation(); handleZoomIn(); }, style: { padding:"8px 16px", background:"#fff", border:"none", borderRadius:"4px", cursor:"pointer", fontSize:"18px" } }, "+"),
                 h("button", { onClick: (e) => { e.stopPropagation(); setZoomedImage(null); }, style: { padding:"8px 16px", background:"#f00", color:"#fff", border:"none", borderRadius:"4px", cursor:"pointer" } }, "✕")
               ),
               h("div", { 
