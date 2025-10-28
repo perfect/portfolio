@@ -107,6 +107,12 @@
         function Lightbox({ item, onClose }) {
           const wrapRef = useRef(null);
           const [atTop, setAtTop] = useState(true);
+          const [zoomedImage, setZoomedImage] = useState(null);
+          const zoomedImageRef = useRef(null);
+          const [zoomScale, setZoomScale] = useState(1);
+          const [position, setPosition] = useState({ x: 0, y: 0 });
+          const [isDragging, setIsDragging] = useState(false);
+          const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
           useEffect(()=>{
             function onKey(e){ if(e.key==="Escape") onClose(); }
@@ -169,6 +175,37 @@
             }
           }, [item]);
 
+          // Handle mouse move for zoom dragging
+          useEffect(() => {
+            const handleMouseMove = (e) => {
+              if (isDragging && zoomScale > 1) {
+                setPosition({
+                  x: e.clientX - dragStart.x,
+                  y: e.clientY - dragStart.y
+                });
+              }
+            };
+
+            const handleMouseUp = () => {
+              setIsDragging(false);
+            };
+
+            if (isDragging) {
+              document.addEventListener('mousemove', handleMouseMove);
+              document.addEventListener('mouseup', handleMouseUp);
+              return () => {
+                document.removeEventListener('mousemove', handleMouseMove);
+                document.removeEventListener('mouseup', handleMouseUp);
+              };
+            }
+          }, [isDragging, zoomScale, dragStart]);
+
+          // Zoom controls
+          const handleZoomIn = () => setZoomScale(Math.min(zoomScale + 0.5, 5));
+          const handleZoomOut = () => setZoomScale(Math.max(zoomScale - 0.5, 0.5));
+          const handleReset = () => setZoomScale(1);
+          const handleImageClick = (src) => setZoomedImage(src);
+
           if (!item) return null;
           const imgs = Array.isArray(item.images) && item.images.length ? item.images : [];
           const hasMore = imgs.length > 1;
@@ -176,8 +213,63 @@
 
           return h("div", { className:"lb-overlay", role:"dialog", "aria-modal":"true", "aria-labelledby":"lb-title", onClick: (e) => { if(e.target === e.currentTarget) onClose(); } },
             h("div", { className:"lb-image-wrap", ref:wrapRef },
-              ...imgs.map((src, i) => h("img", { className:"lb-image", src:src, alt:(item.title || "Project image")+" "+(i+1), key:i })),
+              ...imgs.map((src, i) => 
+                h("div", { key:i, style:{ position:"relative" } },
+                  h("img", { 
+                    className:"lb-image", 
+                    src:src, 
+                    alt:(item.title || "Project image")+" "+(i+1),
+                    onClick: (e) => { e.stopPropagation(); handleImageClick(src); },
+                    style:{ cursor:"pointer" },
+                    title:"点击查看大图"
+                  }),
+                  h("div", { 
+                    style: { position:"absolute", top:"10px", right:"10px", background:"rgba(0,0,0,0.6)", color:"white", padding:"4px 8px", borderRadius:"4px", fontSize:"12px", pointerEvents:"none" }
+                  }, i+1 + " / " + imgs.length)
+                )
+              ),
               hasMore ? h("button", { className:"lb-cue" + (atTop ? "" : " hide"), onClick: (e) => { e.stopPropagation(); scrollToNextImage(); }, type:"button" }, "Scroll for more images ↓") : null
+            ),
+            zoomedImage && h("div", { className:"zoom-overlay", onClick: () => setZoomedImage(null), style: { position:"fixed", inset:0, background:"rgba(0,0,0,0.95)", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center" } },
+              h("div", { className:"zoom-controls", style: { position:"absolute", top:"20px", right:"20px", display:"flex", gap:"10px", zIndex:201 } },
+                h("button", { onClick: (e) => { e.stopPropagation(); handleZoomOut(); }, style: { padding:"8px 16px", background:"#fff", border:"none", borderRadius:"4px", cursor:"pointer", fontSize:"18px" } }, "−"),
+                h("button", { onClick: (e) => { e.stopPropagation(); handleReset(); }, style: { padding:"8px 16px", background:"#fff", border:"none", borderRadius:"4px", cursor:"pointer" } }, "100%"),
+                h("button", { onClick: (e) => { e.stopPropagation(); handleZoomIn(); }, style: { padding:"8px 16px", background:"#fff", border:"none", borderRadius:"4px", cursor:"pointer", fontSize:"18px" } }, "+"),
+                h("button", { onClick: (e) => { e.stopPropagation(); setZoomedImage(null); }, style: { padding:"8px 16px", background:"#f00", color:"#fff", border:"none", borderRadius:"4px", cursor:"pointer" } }, "✕")
+              ),
+              h("div", { 
+                ref: zoomedImageRef,
+                style: { 
+                  transform:`translate(${position.x}px, ${position.y}px)`,
+                  willChange: "transform",
+                  userSelect:"none"
+                }
+              },
+                h("img", { 
+                  src:zoomedImage, 
+                  style: { 
+                    maxWidth:"100%", 
+                    maxHeight:"100%", 
+                    transform:`scale(${zoomScale})`,
+                    cursor:zoomScale > 1 ? (isDragging ? "grabbing" : "grab") : "zoom-in",
+                    transition: isDragging ? "none" : "transform 0.1s",
+                    userSelect:"none",
+                    imageRendering:"-webkit-optimize-contrast"
+                  },
+                  onMouseDown: (e) => { 
+                    e.preventDefault();
+                    if(zoomScale > 1) {
+                      setIsDragging(true);
+                      setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+                    }
+                  },
+                  onWheel: (e) => { 
+                    e.preventDefault(); 
+                    const delta = e.deltaY > 0 ? -0.2 : 0.2; 
+                    setZoomScale(Math.max(0.5, Math.min(zoomScale + delta, 5))); 
+                  }
+                })
+              )
             ),
             h("aside", { className:"lb-panel" },
               h("div", { className:"lb-close-row" },
