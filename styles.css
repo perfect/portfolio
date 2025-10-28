@@ -56,10 +56,11 @@ a.btn, a.btn:hover, .btn:hover{ text-decoration:none !important; }
 
 /* ====== Lightbox: image stack left, text panel right; cue moved to right ====== */
 .lb-overlay{position:fixed;inset:0;background:#fff;z-index:100;display:grid;grid-template-columns:3fr 1fr;gap:10px;overflow:hidden}
-.lb-image-wrap{padding-left:10px;padding-top:10px;display:flex;flex-direction:column;gap:10px;height:100vh;overflow-y:auto;overflow-x:hidden}
+.lb-image-wrap{padding-left:10px;padding-top:10px;display:flex;flex-direction:column;gap:0;height:100vh;overflow-y:auto;overflow-x:hidden}
 .lb-image-wrap::-webkit-scrollbar{display:none}
 .lb-image-wrap{-ms-overflow-style:none;scrollbar-width:none}
-.lb-image{width:100%;height:auto;object-fit:contain;background:#fff;border:none}
+.lb-image-container{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 20px);padding:10px 0;width:100%}
+.lb-image{max-width:100%;max-height:calc(100vh - 40px);object-fit:contain;background:#fff;border:none;display:block}
 .lb-panel{padding:10px 10px 10px 4px;display:flex;flex-direction:column;height:100vh;overflow:hidden}
 .lb-panel::-webkit-scrollbar{display:none}
 .lb-panel{-ms-overflow-style:none;scrollbar-width:none}
