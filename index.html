@@ -30,6 +30,17 @@
           const bigImg = covers.big || "assets/project-1.jpg";
           const tallImg = covers.tall || "assets/project-2.jpg";
           
+          const handleSmoothScroll = (e, targetId) => {
+            e.preventDefault();
+            const targetElement = document.getElementById(targetId);
+            if (targetElement) {
+              targetElement.scrollIntoView({ 
+                behavior: 'smooth',
+                block: 'start'
+              });
+            }
+          };
+          
           return h("section", { id:"home", className:"masthead" },
             h("div", { className:"container" },
               h("div", { className:"nameplate" },
@@ -38,8 +49,8 @@
                   h("div", null, "DING")
                 ),
                 h("nav", { className:"mast-nav", "aria-label":"Primary" },
-                  h("a", { href:"#portfolio" }, "Portfolio"),
-                  h("a", { href:"#about" }, "About")
+                  h("a", { href:"#portfolio", onClick: (e) => handleSmoothScroll(e, 'portfolio') }, "Portfolio"),
+                  h("a", { href:"#about", onClick: (e) => handleSmoothScroll(e, 'about') }, "About")
                 )
               ),
               h("div", { className:"masthead-grid" },
@@ -47,7 +58,7 @@
                 h("div", { className:"tall" }, h("img", { src:tallImg, alt:"" }))
               ),
               h("div", { className:"mast-cta" },
-                h("a", { className:"btn", href:"#portfolio" }, "View Portfolio")
+                h("a", { className:"btn", href:"#portfolio", onClick: (e) => handleSmoothScroll(e, 'portfolio') }, "View Portfolio")
               )
             )
           );
