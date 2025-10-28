@@ -80,92 +80,25 @@ function previewMultipleImages(files) {
   imageFiles.forEach((file, index) => {
     window.currentPaintingFiles.push(file);
     
-    // Use URL.createObjectURL instead of FileReader for large files
-    // This creates a blob URL that doesn't load the entire file into memory
-    try {
-      const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-      console.log(`Creating preview for file: ${file.name}, size: ${fileSizeMB} MB`);
-      
-      const imageUrl = URL.createObjectURL(file);
-      
+    const reader = new FileReader();
+    reader.onload = (e) => {
       const container = document.createElement('div');
       container.className = 'drag-item';
       container.draggable = true;
       container.dataset.index = window.currentPaintingFiles.length - 1;
       
       const img = document.createElement('img');
-      
-      // For large files, show a placeholder to avoid memory issues
-      const isLargeFile = file.size > 100 * 1024 * 1024; // > 100MB
-      
-      if (isLargeFile) {
-        // Use a simple placeholder for very large files (like Wikipedia does)
-        const placeholder = document.createElement('canvas');
-        placeholder.width = 300;
-        placeholder.height = 200;
-        const ctx = placeholder.getContext('2d');
-        
-        // Background
-        const gradient = ctx.createLinearGradient(0, 0, 300, 200);
-        gradient.addColorStop(0, '#e8f4f8');
-        gradient.addColorStop(1, '#d4e8ec');
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, 300, 200);
-        
-        // Warning icon area
-        ctx.fillStyle = '#ffa500';
-        ctx.beginPath();
-        ctx.arc(150, 80, 25, 0, Math.PI * 2);
-        ctx.fill();
-        
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 30px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('⚠', 150, 92);
-        
-        // File info
-        ctx.fillStyle = '#333';
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('Large File', 150, 120);
-        ctx.fillText(`${fileSizeMB} MB`, 150, 140);
-        
-        img.src = placeholder.toDataURL();
-        img.style.backgroundColor = '#e8f4f8';
-      } else {
-        img.src = imageUrl;
-        img.onerror = () => {
-          console.error('Failed to load image preview');
-          img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIFByZXZpZXc8L3RleHQ+PC9zdmc+';
-        };
-      }
-      
+      img.src = e.target.result;
       img.className = 'preview-img';
-      img.title = file.name + ` (${fileSizeMB} MB)`;
-      
-      // Store the blob URL for cleanup later
-      container.imageUrl = isLargeFile ? null : imageUrl;
+      img.title = file.name;
       
       const dragHandle = document.createElement('div');
       dragHandle.className = 'image-drag-handle';
       dragHandle.textContent = '☰';
       dragHandle.title = 'Drag to reorder';
       
-      // Add file size info
-      const sizeInfo = document.createElement('div');
-      sizeInfo.style.position = 'absolute';
-      sizeInfo.style.bottom = '5px';
-      sizeInfo.style.left = '5px';
-      sizeInfo.style.background = 'rgba(0,0,0,0.6)';
-      sizeInfo.style.color = 'white';
-      sizeInfo.style.padding = '2px 6px';
-      sizeInfo.style.borderRadius = '4px';
-      sizeInfo.style.fontSize = '11px';
-      sizeInfo.textContent = fileSizeMB + ' MB';
-      
       container.appendChild(dragHandle);
       container.appendChild(img);
-      container.appendChild(sizeInfo);
       previewDiv.appendChild(container);
       
       loadedCount++;
@@ -173,14 +106,15 @@ function previewMultipleImages(files) {
       if (loadedCount === totalImages) {
         setTimeout(() => setupImageDragAndDrop(previewDiv), 100);
       }
-    } catch (error) {
-      console.error('Failed to create preview for file:', file.name, error);
-      alert(`无法预览文件 ${file.name}。文件可能太大。请直接上传。`);
+    };
+    reader.onerror = () => {
+      console.error('Failed to read file:', file.name);
       loadedCount++;
       if (loadedCount === totalImages) {
         setTimeout(() => setupImageDragAndDrop(previewDiv), 100);
       }
-    }
+    };
+    reader.readAsDataURL(file);
   });
   
   // Show count
@@ -197,15 +131,11 @@ function previewMultipleImages(files) {
 
 function previewImage(file, previewId) {
   if (file) {
-    try {
-      // Use blob URL for large files
-      const imageUrl = URL.createObjectURL(file);
+    const reader = new FileReader();
+    reader.onload = (e) => {
       const img = document.getElementById(previewId);
-      img.src = imageUrl;
+      img.src = e.target.result;
       img.style.display = 'block';
-      
-      // Store URL for cleanup
-      img._objectUrl = imageUrl;
       
       // Keep upload button visible
       const label = img.parentElement.querySelector('.upload-label');
@@ -214,10 +144,8 @@ function previewImage(file, previewId) {
         label.style.display = 'none'; // Hide default label
         btn.style.display = 'inline-block'; // Show change button
       }
-    } catch (error) {
-      console.error('Failed to preview image:', error);
-      alert('文件太大，无法预览。请直接上传。');
-    }
+    };
+    reader.readAsDataURL(file);
   }
 }
 
@@ -337,7 +265,7 @@ async function uploadFile(file, folder, onProgress = null) {
       if (xhr.status >= 200 && xhr.status < 300) {
         try {
           const data = JSON.parse(xhr.responseText);
-          resolve(data);
+          resolve(data.url);
         } catch (error) {
           reject(new Error('Failed to parse response'));
         }
@@ -347,20 +275,13 @@ async function uploadFile(file, folder, onProgress = null) {
     });
 
     xhr.addEventListener('error', () => {
-      reject(new Error('Upload failed - network error'));
+      reject(new Error('Upload failed'));
     });
 
     xhr.addEventListener('abort', () => {
       reject(new Error('Upload aborted'));
     });
 
-    xhr.addEventListener('timeout', () => {
-      reject(new Error('Upload timeout - file may be too large'));
-    });
-
-    // Set timeout to 10 minutes for large files
-    xhr.timeout = 600000;
-    
     xhr.open('POST', `${API_URL}/upload`);
     xhr.setRequestHeader('Authorization', `Bearer ${token}`);
     xhr.send(formData);
@@ -785,12 +706,10 @@ async function loadProfile() {
 
 // Track existing images for editing
 let currentExistingImages = [];
-let currentExistingThumbnails = [];
 
 function showAddPaintingForm() {
   currentEditingPaintingId = null;
   currentExistingImages = [];
-  currentExistingThumbnails = [];
   window.currentPaintingFiles = [];
   document.getElementById('modalTitle').textContent = 'Add Painting';
   document.getElementById('paintingForm').reset();
@@ -805,7 +724,6 @@ function closePaintingModal() {
   document.getElementById('paintingModal').classList.remove('active');
   currentEditingPaintingId = null;
   currentExistingImages = [];
-  currentExistingThumbnails = [];
   window.currentPaintingFiles = [];
 }
 
@@ -883,74 +801,33 @@ async function handlePaintingSubmit(e) {
       ? window.currentPaintingFiles 
       : imageFiles;
     
-    // Check for large files and warn user
-    const largeFiles = filesToUpload.filter(f => f.size > 50 * 1024 * 1024); // > 50MB
-    if (largeFiles.length > 0) {
-      const sizes = largeFiles.map(f => `${(f.size / (1024 * 1024)).toFixed(0)}MB`).join(', ');
-      if (!confirm(`Warning: Large file(s) detected (${sizes}). Upload may take several minutes. Continue?`)) {
-        hideLoading();
-        return;
-      }
-    }
-    
     const newImageUrls = [];
-    const newThumbnailUrls = [];
     const totalFiles = filesToUpload.length;
-    let hasUploadError = false;
-    
     for (let i = 0; i < filesToUpload.length; i++) {
       const file = filesToUpload[i];
       try {
-        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
         progressDiv.style.display = 'block';
-        progressInfo.textContent = `Uploading image ${i + 1} of ${totalFiles} (${fileSizeMB} MB)...`;
+        progressInfo.textContent = `Uploading image ${i + 1} of ${totalFiles}...`;
         
-        const response = await uploadFile(file, 'general', (percent) => {
+        const url = await uploadFile(file, 'paintings', (percent) => {
           // Calculate overall progress
           const overallPercent = Math.round(((i + percent) / totalFiles));
           progressFill.style.width = overallPercent + '%';
           progressText.textContent = overallPercent + '%';
         });
         
-        // Parse response to get both URL and thumbnail URL
-        const result = typeof response === 'string' ? { url: response } : response;
-        newImageUrls.push(result.url);
-        if (result.thumbnailUrl) {
-          newThumbnailUrls.push(result.thumbnailUrl);
-        }
-        
-        console.log(`Uploaded: ${file.name} (${fileSizeMB} MB)`);
+        newImageUrls.push(url);
+        console.log(`Uploaded: ${file.name}`);
       } catch (error) {
-        hasUploadError = true;
         console.error(`Failed to upload ${file.name}:`, error);
-        const errorMsg = error.message || 'Unknown error';
-        const fileSize = (file.size / (1024 * 1024)).toFixed(2);
-        
-        // Ask user if they want to continue with remaining files
-        const continueUpload = confirm(
-          `Failed to upload "${file.name}" (${fileSize} MB)\n\nError: ${errorMsg}\n\nContinue uploading remaining files?`
-        );
-        
-        if (!continueUpload) {
-          progressDiv.style.display = 'none';
-          hideLoading();
-          return;
-        }
+        alert(`Failed to upload ${file.name}. Please try again.`);
       }
     }
     
     progressDiv.style.display = 'none';
     
-    // Check if any files were uploaded
-    if (newImageUrls.length === 0 && !currentEditingPaintingId) {
-      alert('No images were uploaded successfully. Please try again.');
-      hideLoading();
-      return;
-    }
-    
     // Merge existing images and new images
     const finalImages = [...currentExistingImages, ...newImageUrls];
-    const finalThumbnails = [...currentExistingThumbnails, ...newThumbnailUrls];
     
     if (finalImages.length === 0) {
       alert('At least one image is required');
@@ -964,8 +841,7 @@ async function handlePaintingSubmit(e) {
       desc,
       category: 'art', // Default to 'art' since category is removed from form
       year, medium, size,
-      images: finalImages,
-      thumbnails: finalThumbnails
+      images: finalImages
     };
 
     const url = currentEditingPaintingId 
@@ -1034,7 +910,6 @@ async function editPainting(id) {
 
     currentEditingPaintingId = id;
     currentExistingImages = painting.images || [];
-    currentExistingThumbnails = painting.thumbnails || [];
     window.currentPaintingFiles = [];
     
     document.getElementById('modalTitle').textContent = 'Edit Painting';

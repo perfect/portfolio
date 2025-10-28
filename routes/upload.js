@@ -2,7 +2,6 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const sharp = require('sharp');
 const { verifyToken } = require('./auth.js');
 
 const router = express.Router();
@@ -53,56 +52,6 @@ const upload = multer({
   }
 });
 
-// Generate thumbnail
-async function generateThumbnail(inputPath, outputPath, width = 300, height = 300) {
-  try {
-    // Get file size first to decide processing approach
-    const stats = await require('fs').promises.stat(inputPath);
-    const fileSizeMB = stats.size / (1024 * 1024);
-    console.log(`File size: ${fileSizeMB.toFixed(2)} MB`);
-    
-    // Get image metadata (with pixel limit disabled for large files)
-    const metadata = await sharp(inputPath, { limitInputPixels: false }).metadata();
-    console.log(`Image dimensions: ${metadata.width}x${metadata.height}`);
-    
-    // For very large files, use simpler approach
-    if (fileSizeMB > 100) {
-      console.log('Large file detected, using sequential processing');
-      // First resize to intermediate size
-      await sharp(inputPath, {
-        limitInputPixels: false  // Allow processing very large images
-      })
-        .resize(2000, 2000, { fit: 'inside' })
-        .jpeg({ quality: 80 })
-        .toFile(outputPath + '.tmp');
-      
-      // Then create thumbnail
-      await sharp(outputPath + '.tmp')
-        .resize(width, height, { fit: 'inside' })
-        .jpeg({ quality: 80 })
-        .toFile(outputPath);
-      
-      // Clean up temp file
-      await require('fs').promises.unlink(outputPath + '.tmp');
-    } else {
-      // Normal processing for smaller files
-      await sharp(inputPath)
-        .resize(width, height, { 
-          fit: 'inside',
-          withoutEnlargement: true 
-        })
-        .jpeg({ quality: 80 })
-        .toFile(outputPath);
-    }
-    
-    console.log(`Thumbnail generated: ${outputPath}`);
-    return true;
-  } catch (error) {
-    console.error('Thumbnail generation error:', error);
-    return false;
-  }
-}
-
 // Upload endpoint - uploads single file
 router.post('/', verifyToken, upload.single('file'), async (req, res) => {
   try {
@@ -117,26 +66,7 @@ router.post('/', verifyToken, upload.single('file'), async (req, res) => {
     const filename = req.file.filename;
     const url = `/uploads/${folder}/${filename}`;
 
-    // Generate thumbnail for paintings and general folders
-    let thumbnailUrl = null;
-    if (folder === 'paintings' || folder === 'general') {
-      const thumbnailDir = path.join(uploadsDir, 'thumbnails');
-      if (!fs.existsSync(thumbnailDir)) {
-        fs.mkdirSync(thumbnailDir, { recursive: true });
-      }
-      
-      const thumbnailPath = path.join(thumbnailDir, filename);
-      const thumbnailGenerated = await generateThumbnail(filePath, thumbnailPath);
-      
-      if (thumbnailGenerated) {
-        thumbnailUrl = `/uploads/thumbnails/${filename}`;
-      }
-    }
-
-    res.json({ 
-      url, 
-      thumbnailUrl 
-    });
+    res.json({ url });
   } catch (error) {
     console.error('Upload error:', error);
     res.status(500).json({ error: 'Upload failed', details: error.message });

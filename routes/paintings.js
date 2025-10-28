@@ -40,7 +40,7 @@ router.get('/:id', async (req, res) => {
 // Create painting
 router.post('/', verifyToken, async (req, res) => {
   try {
-    const { title, desc, category, year, medium, size, images, thumbnails } = req.body;
+    const { title, desc, category, year, medium, size, images } = req.body;
 
     if (!title) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -55,7 +55,6 @@ router.post('/', verifyToken, async (req, res) => {
         medium: medium || '',
         size: size || '',
         images: images || [],
-        thumbnails: thumbnails || [],
       },
     });
 
@@ -104,7 +103,7 @@ router.put('/update-order', verifyToken, async (req, res) => {
 // Update painting
 router.put('/:id', verifyToken, async (req, res) => {
   try {
-    const { title, desc, category, year, medium, size, images, thumbnails } = req.body;
+    const { title, desc, category, year, medium, size, images } = req.body;
 
     const painting = await prisma.painting.update({
       where: { id: parseInt(req.params.id) },
@@ -116,7 +115,6 @@ router.put('/:id', verifyToken, async (req, res) => {
         medium,
         size,
         images,
-        thumbnails,
       },
     });
 
