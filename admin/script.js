@@ -84,6 +84,8 @@ function previewMultipleImages(files) {
     // This creates a blob URL that doesn't load the entire file into memory
     try {
       const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      console.log(`Creating preview for file: ${file.name}, size: ${fileSizeMB} MB`);
+      
       const imageUrl = URL.createObjectURL(file);
       
       const container = document.createElement('div');
@@ -92,12 +94,36 @@ function previewMultipleImages(files) {
       container.dataset.index = window.currentPaintingFiles.length - 1;
       
       const img = document.createElement('img');
-      img.src = imageUrl;
+      
+      // For large files, show a placeholder instead of loading the actual image
+      const isLargeFile = file.size > 50 * 1024 * 1024; // > 50MB
+      
+      if (isLargeFile) {
+        // Use a data URL for a simple placeholder
+        const canvas = document.createElement('canvas');
+        canvas.width = 300;
+        canvas.height = 200;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#f0f0f0';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#666';
+        ctx.font = '14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${fileSizeMB} MB`, canvas.width / 2, canvas.height / 2);
+        img.src = canvas.toDataURL();
+      } else {
+        img.src = imageUrl;
+        img.onerror = () => {
+          console.error('Failed to load image preview');
+          img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjBmMGYwIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIFByZXZpZXc8L3RleHQ+PC9zdmc+';
+        };
+      }
+      
       img.className = 'preview-img';
       img.title = file.name + ` (${fileSizeMB} MB)`;
       
       // Store the blob URL for cleanup later
-      container.imageUrl = imageUrl;
+      container.imageUrl = isLargeFile ? null : imageUrl;
       
       const dragHandle = document.createElement('div');
       dragHandle.className = 'image-drag-handle';
