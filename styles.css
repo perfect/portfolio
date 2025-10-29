@@ -65,12 +65,16 @@ a.btn, a.btn:hover, .btn:hover{ text-decoration:none !important; }
 .lb-panel::-webkit-scrollbar{display:none}
 .lb-panel{-ms-overflow-style:none;scrollbar-width:none}
 .lb-close-row{display:flex;justify-content:flex-end;margin-bottom:.5rem}
-/* Navigation controls */
-.lb-nav-controls{position:fixed;bottom:20px;left:20px;display:flex;gap:15px;align-items:center;z-index:101}
-.lb-nav-btn{background:#000;color:#fff;border:none;border-radius:999px;padding:8px 16px;font-size:12px;cursor:pointer;font-family:inherit;transition:opacity 0.2s}
-.lb-nav-btn:hover{opacity:0.8;background:#333}
-/* Scroll cue now lives in the right panel, sticky at top-right */
-.lb-cue{position:fixed;bottom:20px;right:20px;background:#000;color:#fff;font-size:12px;border-radius:999px;padding:8px 12px;opacity:.95;z-index:101;cursor:pointer;border:none;font-family:inherit;transition:opacity 0.2s}
+/* Navigation controls container */
+.lb-nav-controls{position:fixed;bottom:20px;right:20px;display:flex;gap:8px;z-index:101;align-items:center}
+
+/* Navigation buttons */
+.lb-nav-btn{background:#000;color:#fff;font-size:12px;border-radius:20px;padding:8px 12px;opacity:.95;z-index:101;cursor:pointer;border:none;font-family:inherit;transition:all 0.2s;display:flex;align-items:center;justify-content:center;font-weight:500;white-space:nowrap}
+.lb-nav-btn:hover{opacity:1;background:#333;transform:scale(1.05)}
+.lb-nav-btn:active{transform:scale(0.95)}
+
+/* Scroll cue now lives in the navigation controls */
+.lb-cue{background:#000;color:#fff;font-size:12px;border-radius:999px;padding:8px 12px;opacity:.95;z-index:101;cursor:pointer;border:none;font-family:inherit;transition:opacity 0.2s}
 .lb-cue:hover{opacity:1;background:#333}
 .lb-cue.hide{display:none}
 .lb-title{margin:0 0 .25rem;font-size:1.25rem;font-weight:700}

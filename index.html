@@ -129,7 +129,6 @@
           const [position, setPosition] = useState({ x: 0, y: 0 });
           const [isDragging, setIsDragging] = useState(false);
           const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-          const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
           useEffect(()=>{
             function onKey(e){ if(e.key==="Escape") onClose(); }
@@ -142,108 +141,22 @@
             const el = wrapRef.current;
             if (!el) return;
             
-            // Get all images
-            const imgs = el.querySelectorAll('.lb-image');
-            if (imgs.length <= 1) return;
-            
             const viewportHeight = el.clientHeight;
-            const currentScroll = el.scrollTop;
-            
-            // Find which image is currently in view
-            let currentImageIndex = -1;
-            for (let i = 0; i < imgs.length; i++) {
-              const img = imgs[i];
-              if (img.offsetTop <= currentScroll + 100) {
-                currentImageIndex = i;
-              }
-            }
-            
-            // Scroll to next image
-            if (currentImageIndex >= 0 && currentImageIndex < imgs.length - 1) {
-              const nextImg = imgs[currentImageIndex + 1];
-              nextImg.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'start' 
-              });
-            } else if (imgs.length > 0) {
-              // Scroll by viewport height
-              el.scrollBy({ 
-                top: viewportHeight, 
-                behavior: 'smooth' 
-              });
-            }
+            el.scrollBy({ 
+              top: viewportHeight, 
+              behavior: 'smooth' 
+            });
           };
 
           const scrollToPreviousImage = () => {
             const el = wrapRef.current;
             if (!el) return;
             
-            // Get all images
-            const imgs = el.querySelectorAll('.lb-image');
-            if (imgs.length <= 1) return;
-            
             const viewportHeight = el.clientHeight;
-            const currentScroll = el.scrollTop;
-            
-            // Find which image is currently in view
-            let currentImageIndex = -1;
-            for (let i = 0; i < imgs.length; i++) {
-              const img = imgs[i];
-              if (img.offsetTop <= currentScroll + 100) {
-                currentImageIndex = i;
-              }
-            }
-            
-            // Scroll to previous image
-            if (currentImageIndex > 0) {
-              const prevImg = imgs[currentImageIndex - 1];
-              prevImg.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'start' 
-              });
-            } else if (imgs.length > 0) {
-              // Scroll by viewport height
-              el.scrollBy({ 
-                top: -viewportHeight, 
-                behavior: 'smooth' 
-              });
-            }
-          };
-
-          const scrollToNextImage = () => {
-            const el = wrapRef.current;
-            if (!el) return;
-            
-            // Get all images
-            const imgs = el.querySelectorAll('.lb-image');
-            if (imgs.length <= 1) return;
-            
-            const viewportHeight = el.clientHeight;
-            const currentScroll = el.scrollTop;
-            
-            // Find which image is currently in view
-            let currentImageIndex = -1;
-            for (let i = 0; i < imgs.length; i++) {
-              const img = imgs[i];
-              if (img.offsetTop <= currentScroll + 100) {
-                currentImageIndex = i;
-              }
-            }
-            
-            // Scroll to next image
-            if (currentImageIndex >= 0 && currentImageIndex < imgs.length - 1) {
-              const nextImg = imgs[currentImageIndex + 1];
-              nextImg.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'start' 
-              });
-            } else if (imgs.length > 0) {
-              // Scroll by viewport height
-              el.scrollBy({ 
-                top: viewportHeight, 
-                behavior: 'smooth' 
-              });
-            }
+            el.scrollBy({ 
+              top: -viewportHeight, 
+              behavior: 'smooth' 
+            });
           };
 
           // Update URL when lightbox opens/closes
@@ -309,44 +222,11 @@
                   }, i+1 + " / " + imgs.length)
                 )
               ),
-              hasMore ? h("div", { className:"lb-nav-controls", style: { position:"fixed", bottom:"20px", left:"20px", display:"flex", gap:"15px", alignItems:"center", zIndex:101 } },
-                h("button", { 
-                  className:"lb-nav-btn", 
-                  onClick: (e) => { e.stopPropagation(); scrollToPreviousImage(); }, 
-                  type:"button",
-                  style: { 
-                    background:"#000", 
-                    color:"#fff", 
-                    border:"none", 
-                    borderRadius:"999px", 
-                    padding:"8px 16px", 
-                    fontSize:"12px", 
-                    cursor:"pointer", 
-                    fontFamily:"inherit",
-                    transition:"opacity 0.2s"
-                  }
-                }, "← Previous"),
-                h("button", { 
-                  className:"lb-nav-btn", 
-                  onClick: (e) => { e.stopPropagation(); scrollToNextImage(); }, 
-                  type:"button",
-                  style: { 
-                    background:"#000", 
-                    color:"#fff", 
-                    border:"none", 
-                    borderRadius:"999px", 
-                    padding:"8px 16px", 
-                    fontSize:"12px", 
-                    cursor:"pointer", 
-                    fontFamily:"inherit",
-                    transition:"opacity 0.2s"
-                  }
-                }, "Next →"),
-                h("button", { 
-                  className:"lb-cue", 
-                  onClick: (e) => { e.stopPropagation(); scrollToNextImage(); }, 
-                  type:"button" 
-                }, "Scroll for more images ↓")
+              hasMore ? h("div", { className:"lb-nav-controls", style: { position:"fixed", bottom:"20px", right:"20px", display:"flex", gap:"8px", zIndex:101 } },
+                h("button", { className:"lb-nav-btn", onClick: (e) => { e.stopPropagation(); scrollToPreviousImage(); }, type:"button", "aria-label":"Previous image" }, "Previous"),
+                h("button", { className:"lb-nav-btn", onClick: (e) => { e.stopPropagation(); scrollToNextImage(); }, type:"button", "aria-label":"Next image" }, "Next"),
+                h("div", { style: { width:"36px" } }),
+                h("button", { className:"lb-cue", onClick: (e) => { e.stopPropagation(); scrollToNextImage(); }, type:"button" }, "Scroll for more images ↓")
               ) : null
             ),
             zoomedImage && h("div", { className:"zoom-overlay", style: { position:"fixed", inset:0, background:"rgba(0,0,0,0.95)", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center" } },
