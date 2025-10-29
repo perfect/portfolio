@@ -137,6 +137,33 @@
             return ()=>document.removeEventListener("keydown", onKey);
           },[item, onClose]);
 
+          // Update current image index when scrolling
+          useEffect(() => {
+            if (!item || !wrapRef.current) return;
+            
+            const el = wrapRef.current;
+            const imgs = el.querySelectorAll('.lb-image');
+            
+            const updateCurrentIndex = () => {
+              const currentScroll = el.scrollTop;
+              let newIndex = 0;
+              
+              for (let i = 0; i < imgs.length; i++) {
+                const img = imgs[i];
+                if (img.offsetTop <= currentScroll + 100) {
+                  newIndex = i;
+                }
+              }
+              
+              setCurrentImageIndex(newIndex);
+            };
+            
+            el.addEventListener('scroll', updateCurrentIndex);
+            updateCurrentIndex(); // Initial update
+            
+            return () => el.removeEventListener('scroll', updateCurrentIndex);
+          }, [item]);
+
 
           const scrollToNextImage = () => {
             const el = wrapRef.current;
@@ -273,6 +300,7 @@
                   className:"lb-nav-btn", 
                   onClick: (e) => { e.stopPropagation(); scrollToPreviousImage(); }, 
                   type:"button",
+                  disabled: currentImageIndex <= 0,
                   style: { 
                     background:"#000", 
                     color:"#fff", 
@@ -280,7 +308,7 @@
                     borderRadius:"999px", 
                     padding:"8px 12px", 
                     fontSize:"12px", 
-                    cursor:"pointer", 
+                    cursor: currentImageIndex > 0 ? "pointer" : "not-allowed", 
                     fontFamily:"inherit",
                     opacity: currentImageIndex > 0 ? 0.95 : 0.3,
                     transition:"opacity 0.2s"
@@ -290,6 +318,7 @@
                   className:"lb-nav-btn", 
                   onClick: (e) => { e.stopPropagation(); scrollToNextImage(); }, 
                   type:"button",
+                  disabled: currentImageIndex >= imgs.length - 1,
                   style: { 
                     background:"#000", 
                     color:"#fff", 
@@ -297,7 +326,7 @@
                     borderRadius:"999px", 
                     padding:"8px 12px", 
                     fontSize:"12px", 
-                    cursor:"pointer", 
+                    cursor: currentImageIndex < imgs.length - 1 ? "pointer" : "not-allowed", 
                     fontFamily:"inherit",
                     opacity: currentImageIndex < imgs.length - 1 ? 0.95 : 0.3,
                     transition:"opacity 0.2s"
