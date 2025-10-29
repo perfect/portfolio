@@ -121,7 +121,7 @@
           );
         }
 
-        function Lightbox({ item, onClose }) {
+        function Lightbox({ item, onClose, allItems, onNavigate }) {
           const wrapRef = useRef(null);
           const [zoomedImage, setZoomedImage] = useState(null);
           const zoomedImageRef = useRef(null);
@@ -214,6 +214,23 @@
           const handleReset = () => setZoomScale(1);
           const handleImageClick = (src) => setZoomedImage(src);
 
+          // Navigation controls
+          const currentIndex = allItems ? allItems.findIndex(p => p.id === item.id) : -1;
+          const hasPrevious = currentIndex > 0;
+          const hasNext = currentIndex >= 0 && currentIndex < allItems.length - 1;
+          
+          const handlePrevious = () => {
+            if (hasPrevious && onNavigate) {
+              onNavigate(allItems[currentIndex - 1]);
+            }
+          };
+          
+          const handleNext = () => {
+            if (hasNext && onNavigate) {
+              onNavigate(allItems[currentIndex + 1]);
+            }
+          };
+
           if (!item) return null;
           const imgs = Array.isArray(item.images) && item.images.length ? item.images : [];
           const hasMore = imgs.length > 1;
@@ -235,6 +252,21 @@
                     style: { position:"absolute", top:"20px", right:"20px", background:"rgba(0,0,0,0.6)", color:"white", padding:"4px 8px", borderRadius:"4px", fontSize:"12px", pointerEvents:"none" }
                   }, i+1 + " / " + imgs.length)
                 )
+              ),
+              // Navigation buttons
+              h("div", { className:"lb-nav-buttons", style:{ position:"fixed", bottom:"20px", left:"20px", display:"flex", gap:"10px", zIndex:101 } },
+                hasPrevious ? h("button", { 
+                  className:"lb-nav-btn lb-nav-prev", 
+                  onClick: (e) => { e.stopPropagation(); handlePrevious(); }, 
+                  type:"button",
+                  "aria-label":"Previous painting"
+                }, "← Previous") : null,
+                hasNext ? h("button", { 
+                  className:"lb-nav-btn lb-nav-next", 
+                  onClick: (e) => { e.stopPropagation(); handleNext(); }, 
+                  type:"button",
+                  "aria-label":"Next painting"
+                }, "Next →") : null
               ),
               hasMore ? h("button", { className:"lb-cue", onClick: (e) => { e.stopPropagation(); scrollToNextImage(); }, type:"button" }, "Scroll for more images ↓") : null
             ),
@@ -396,15 +428,25 @@
               h(About, { profile })
             ),
             h(Footer, null),
-            h(Lightbox, { item:active, onClose: ()=>{
-              console.log('Closing lightbox');
-              setActive(null); 
-              window.location.hash = '';
-              // 恢复滚动位置
-              setTimeout(() => {
-                window.scrollTo(0, savedScrollPosition);
-              }, 100);
-            } })
+            h(Lightbox, { 
+              item:active, 
+              allItems:projects,
+              onNavigate: (newItem) => {
+                setActive(newItem);
+                // 更新URL
+                const newUrl = `#painting-${newItem.id}`;
+                window.history.pushState({ paintingId: newItem.id }, '', newUrl);
+              },
+              onClose: ()=>{
+                console.log('Closing lightbox');
+                setActive(null); 
+                window.location.hash = '';
+                // 恢复滚动位置
+                setTimeout(() => {
+                  window.scrollTo(0, savedScrollPosition);
+                }, 100);
+              } 
+            })
           );
         }
 
