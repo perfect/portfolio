@@ -197,8 +197,51 @@
           // Zoom controls
           const handleZoomIn = () => setZoomScale(Math.min(zoomScale + 0.25, 5));
           const handleZoomOut = () => setZoomScale(Math.max(zoomScale - 0.25, 0.25));
-          const handleReset = () => setZoomScale(1);
-          const handleImageClick = (src) => setZoomedImage(src);
+          const handleFitToWindow = () => {
+            const el = wrapRef.current;
+            if (!el) return;
+            
+            const containerWidth = el.clientWidth;
+            const containerHeight = el.clientHeight;
+            const imageWidth = zoomedImageRef.current?.clientWidth || containerWidth;
+            const imageHeight = zoomedImageRef.current?.clientHeight || containerHeight;
+            
+            // Calculate scale to fit image in window
+            const scaleX = containerWidth / imageWidth;
+            const scaleY = containerHeight / imageHeight;
+            const fitScale = Math.min(scaleX, scaleY) * 0.97; // 2% padding
+            
+            setZoomScale(Math.max(0.25, Math.min(fitScale, 5)));
+            setPosition({ x: 0, y: 0 }); // Reset position
+          };
+          const handleImageClick = (src) => {
+            setZoomedImage(src);
+            // Reset zoom scale to 1 initially, will be adjusted by useEffect
+            setZoomScale(1);
+            setPosition({ x: 0, y: 0 });
+          };
+
+          // Auto fit to window when image loads
+          useEffect(() => {
+            if (zoomedImage && zoomedImageRef.current) {
+              // Wait for image to load, then fit to window
+              const img = zoomedImageRef.current.querySelector('img');
+              if (img) {
+                const handleLoad = () => {
+                  setTimeout(() => {
+                    handleFitToWindow();
+                  }, 100); // Small delay to ensure dimensions are available
+                };
+                
+                if (img.complete) {
+                  handleLoad();
+                } else {
+                  img.addEventListener('load', handleLoad);
+                  return () => img.removeEventListener('load', handleLoad);
+                }
+              }
+            }
+          }, [zoomedImage]);
 
           if (!item) return null;
           const imgs = Array.isArray(item.images) && item.images.length ? item.images : [];
@@ -232,7 +275,7 @@
             zoomedImage && h("div", { className:"zoom-overlay", style: { position:"fixed", inset:0, background:"rgba(0,0,0,0.95)", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center" } },
               h("div", { className:"zoom-controls", style: { position:"absolute", top:"20px", right:"20px", display:"flex", gap:"10px", zIndex:201, alignItems:"center" } },
                 h("button", { onClick: (e) => { e.stopPropagation(); handleZoomOut(); }, style: { padding:"8px 16px", background:"#fff", border:"none", borderRadius:"4px", cursor:"pointer", fontSize:"18px" } }, "−"),
-                h("button", { onClick: (e) => { e.stopPropagation(); handleReset(); }, style: { padding:"8px 16px", background:"#fff", border:"none", borderRadius:"4px", cursor:"pointer" } }, "Reset"),
+                h("button", { onClick: (e) => { e.stopPropagation(); handleFitToWindow(); }, style: { padding:"8px 16px", background:"#fff", border:"none", borderRadius:"4px", cursor:"pointer" } }, "fit to window"),
                 h("button", { onClick: (e) => { e.stopPropagation(); handleZoomIn(); }, style: { padding:"8px 16px", background:"#fff", border:"none", borderRadius:"4px", cursor:"pointer", fontSize:"18px" } }, "+"),
                 h("div", { style: { padding:"8px 12px", background:"rgba(255,255,255,0.9)", borderRadius:"4px", fontSize:"14px", fontWeight:"500", color:"#000", minWidth:"60px", textAlign:"center" } }, Math.round(zoomScale * 100) + "%"),
                 h("button", { onClick: (e) => { e.stopPropagation(); setZoomedImage(null); }, style: { padding:"8px 16px", background:"#f00", color:"#fff", border:"none", borderRadius:"4px", cursor:"pointer" } }, "✕")
@@ -251,7 +294,7 @@
                     maxWidth:"100%", 
                     maxHeight:"100%", 
                     transform:`scale(${zoomScale})`,
-                    cursor:zoomScale > 1 ? (isDragging ? "grabbing" : "grab") : "zoom-in",
+                    cursor:zoomScale > 1 ? (isDragging ? "grabbing" : "grab") : "default",
                     transition: isDragging ? "none" : "transform 0.1s",
                     userSelect:"none",
                     imageRendering:"-webkit-optimize-contrast"
