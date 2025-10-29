@@ -265,11 +265,9 @@
                   }, i+1 + " / " + imgs.length)
                 )
               ),
-              hasMore ? h("div", { className:"lb-nav-controls", style: { position:"fixed", bottom:"20px", right:"20px", display:"flex", gap:"8px", zIndex:101 } },
+              hasMore ? h("div", { className:"lb-nav-controls", style: { position:"fixed", bottom:"20px", right:"260px", display:"flex", gap:"8px", zIndex:101 } },
                 h("button", { className:"lb-nav-btn", onClick: (e) => { e.stopPropagation(); scrollToPreviousImage(); }, type:"button", "aria-label":"Previous image" }, "Previous"),
-                h("button", { className:"lb-nav-btn", onClick: (e) => { e.stopPropagation(); scrollToNextImage(); }, type:"button", "aria-label":"Next image" }, "Next"),
-                h("div", { style: { width:"36px" } }),
-                h("button", { className:"lb-cue", onClick: (e) => { e.stopPropagation(); scrollToNextImage(); }, type:"button" }, "Scroll for more images ↓")
+                h("button", { className:"lb-nav-btn", onClick: (e) => { e.stopPropagation(); scrollToNextImage(); }, type:"button", "aria-label":"Next image" }, "Next")
               ) : null
             ),
             zoomedImage && h("div", { className:"zoom-overlay", style: { position:"fixed", inset:0, background:"rgba(0,0,0,0.95)", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center" } },
