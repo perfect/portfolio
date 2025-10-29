@@ -71,11 +71,8 @@ a.btn, a.btn:hover, .btn:hover{ text-decoration:none !important; }
 .lb-cue.hide{display:none}
 
 /* Navigation buttons */
-.lb-nav-buttons{position:fixed;bottom:20px;left:20px;display:flex;gap:10px;z-index:101}
-.lb-nav-btn{background:#000;color:#fff;font-size:12px;border-radius:999px;padding:8px 12px;opacity:.95;cursor:pointer;border:none;font-family:inherit;transition:all 0.2s;font-weight:500}
-.lb-nav-btn:hover{opacity:1;background:#333;transform:translateY(-1px)}
-.lb-nav-btn:active{transform:translateY(0)}
-.lb-nav-btn:disabled{opacity:0.3;cursor:not-allowed;transform:none}
+.lb-nav-btn:hover{opacity:1 !important;background:#333 !important}
+.lb-nav-btn:disabled{opacity:0.3 !important;cursor:not-allowed !important}
 .lb-title{margin:0 0 .25rem;font-size:1.25rem;font-weight:700}
 .lb-desc{margin:.5rem 0 0}
 .lb-meta-table{display:grid;grid-template-columns:max-content 1fr;column-gap:12px;row-gap:6px;margin-top:.75rem}
